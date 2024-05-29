@@ -204,3 +204,5 @@ cython_debug/
 
 #test files
 test-files/
+
+.DS_Store
