@@ -206,3 +206,5 @@ cython_debug/
 test-files/
 
 .DS_Store
+
+**/lambda/**.zip

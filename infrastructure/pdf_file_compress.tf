@@ -22,43 +22,43 @@ data "aws_subnets" "default_subnets" {
 }
 
 # Create an S3 bucket
-resource "aws_s3_bucket" "sei_compress_package" {
-  bucket = "sei-compress-package"
+resource "aws_s3_bucket" "pdf_compress_solution_package" {
+  bucket = "pdf-compress-solution-package"
 }
 
 # Create an SNS topic
-resource "aws_sns_topic" "sei_compressor" {
-  name = "sei-compressor"
+resource "aws_sns_topic" "pdf_compressor" {
+  name = "pdf-compressor"
 }
 
 # Define the lambda function
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_dir  = "../lambda" # Replace with the path to your Lambda function code
+  source_dir  = "../lambda"
   output_path = "../lambda/lambda_function.zip"
 }
 
 # Upload the Lambda function to S3
 resource "aws_s3_object" "lambda_function" {
-  bucket = aws_s3_bucket.sei_compress_package.id
+  bucket = aws_s3_bucket.pdf_compress_solution_package.id
   key    = "lambda_function.zip"
   source = data.archive_file.lambda_zip.output_path
   etag   = filemd5(data.archive_file.lambda_zip.output_path)
 }
 
 # Create an EFS file system
-resource "aws_efs_file_system" "sei_efs" {
-  creation_token = "sei-efs"
+resource "aws_efs_file_system" "pdf_efs" {
+  creation_token = "pdf-efs"
 
   tags = {
-    Name = "sei-efs"
+    Name = "pdf-efs"
   }
 }
 
 # Create EFS mount targets in the availability zones where the Lambda function has corresponding subnets
 resource "aws_efs_mount_target" "efs_mount_targets" {
   count           = length(data.aws_subnets.default_subnets.ids)
-  file_system_id  = aws_efs_file_system.sei_efs.id
+  file_system_id  = aws_efs_file_system.pdf_efs.id
   subnet_id       = data.aws_subnets.default_subnets.ids[count.index]
   security_groups = [aws_security_group.efs_security_group.id]
 }
@@ -114,8 +114,8 @@ resource "aws_security_group" "lambda_security_group" {
 }
 
 # Create an EFS access point
-resource "aws_efs_access_point" "sei_access_point" {
-  file_system_id = aws_efs_file_system.sei_efs.id
+resource "aws_efs_access_point" "pdf_access_point" {
+  file_system_id = aws_efs_file_system.pdf_efs.id
 
   root_directory {
     path = "/"
@@ -133,7 +133,7 @@ resource "aws_efs_access_point" "sei_access_point" {
 
 # Create an IAM role for the Lambda function
 resource "aws_iam_role" "lambda_role" {
-  name               = "sei_compress_lambda_role"
+  name               = "pdf_compress_lambda_role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
 }
 
@@ -216,7 +216,7 @@ resource "aws_iam_policy" "lambda_sns_policy" {
       "Action": [
         "sns:Subscribe"
       ],
-      "Resource": "${aws_sns_topic.sei_compressor.arn}"
+      "Resource": "${aws_sns_topic.pdf_compressor.arn}"
     }
   ]
 }
@@ -238,7 +238,7 @@ resource "aws_iam_policy" "lambda_efs_policy" {
         "elasticfilesystem:ClientMount",
         "elasticfilesystem:ClientWrite"
       ],
-      "Resource": ["${aws_efs_file_system.sei_efs.arn}", "${aws_efs_access_point.sei_access_point.arn}"]
+      "Resource": ["${aws_efs_file_system.pdf_efs.arn}", "${aws_efs_access_point.pdf_access_point.arn}"]
     }
   ]
 }
@@ -246,20 +246,20 @@ EOF
 }
 
 # Create a log group for the Lambda function
-resource "aws_cloudwatch_log_group" "sei_compress_lambda_log_group" {
-  name              = "/aws/lambda/sei_compress_lambda"
+resource "aws_cloudwatch_log_group" "pdf_compress_lambda_log_group" {
+  name              = "/aws/lambda/pdf_compress_lambda"
   retention_in_days = 7 # Adjust the retention period as needed
 }
 
 # Create the Lambda function
-resource "aws_lambda_function" "sei_compress_lambda" {
-  function_name = "sei_compress_lambda"
+resource "aws_lambda_function" "pdf_compress_lambda" {
+  function_name = "pdf_compress_lambda"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.10"
-  s3_bucket     = aws_s3_bucket.sei_compress_package.id
+  runtime       = "python3.12"
+  s3_bucket     = aws_s3_bucket.pdf_compress_solution_package.id
   s3_key        = aws_s3_object.lambda_function.key
-  timeout       = 60 # Adjust the timeout as needed
+  timeout       = 60 
   memory_size   = 256
   source_code_hash = filebase64sha256("${data.archive_file.lambda_zip.output_path}")
 
@@ -269,7 +269,7 @@ resource "aws_lambda_function" "sei_compress_lambda" {
   }
 
   file_system_config {
-    arn            = aws_efs_access_point.sei_access_point.arn
+    arn            = aws_efs_access_point.pdf_access_point.arn
     local_mount_path = "/mnt/lambda"
   }
 
@@ -278,7 +278,7 @@ resource "aws_lambda_function" "sei_compress_lambda" {
   }
 
   depends_on = [
-    aws_cloudwatch_log_group.sei_compress_lambda_log_group
+    aws_cloudwatch_log_group.pdf_compress_lambda_log_group
   ]
   
   layers = ["arn:aws:lambda:us-east-1:770693421928:layer:Klayers-p310-Pillow:7"]
@@ -295,14 +295,14 @@ resource "aws_lambda_function" "sei_compress_lambda" {
 resource "aws_lambda_permission" "sns_trigger" {
   statement_id   = "AllowExecutionFromSNS"
   action         = "lambda:InvokeFunction"
-  function_name  = aws_lambda_function.sei_compress_lambda.function_name
+  function_name  = aws_lambda_function.pdf_compress_lambda.function_name
   principal      = "sns.amazonaws.com"
-  source_arn     = aws_sns_topic.sei_compressor.arn
+  source_arn     = aws_sns_topic.pdf_compressor.arn
 }
 
 # Subscribe the Lambda function to the SNS topic
 resource "aws_sns_topic_subscription" "lambda_subscription" {
-  topic_arn = aws_sns_topic.sei_compressor.arn
+  topic_arn = aws_sns_topic.pdf_compressor.arn
   protocol  = "lambda"
-  endpoint  = aws_lambda_function.sei_compress_lambda.arn
+  endpoint  = aws_lambda_function.pdf_compress_lambda.arn
 }

@@ -1,0 +1,12 @@
+[Unit]
+Description="Process Files to be Compressed"
+
+[Service]
+Restart=always
+User=root
+WorkingDirectory=/etc/systemd/system/pdf-file-compressor.d
+ExecStart=python3 /etc/systemd/system/pdf-file-compressor.d/pdf_file_compressor.sh
+EnvironmentFile=/etc/systemd/system/pdf-file-compressor.d/pdf_file_compressor.conf
+
+[Install]
+WantedBy=multi-user target

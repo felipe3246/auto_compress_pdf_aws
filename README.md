@@ -1,10 +1,10 @@
-# AutoCompress SEI PDF files
+# AutoCompress PDF files
 
-This project is an automation tool based on AWS Services to compress SEI (Sistema Eletrônico de Informação desenvolvido pelo TRF4) PDF files uploaded by users into an EFS filesystem.
+This project is an automation tool based on AWS Services to compress any PDF files uploaded by users into an EFS filesystem using pypdf python library.
 
 ## Overview
 
-The tool consists of watching a specific folder in a mounted EFS filesystem and notifying an AWS Lambda function using Amazon SNS service to compress any PDF file added to that folder. The compressed file is then saved in the same directory with a different filename.
+The tool consists of watching a specific folder in a mounted EFS filesystem and notifying an AWS Lambda function using Amazon SNS service to compress any PDF file added to that folder. The compressed file is then saved in the same directory with a different filename e.g: '_compressed' name.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ The solution utilizes the following components:
 - **Python 3.12**: The backend language used for the AWS Lambda function responsible for compressing PDF files.
 - **Shell Script**: A Linux watch service that monitors the target folder and triggers the Lambda function when new PDF files are added.
 - **Amazon SNS**: As the notification service to receive communication from servers and trigger the lambda function.
-- **AWS Lambda**: The serverless compute service that runs the Python function to compress PDF files.
+- **AWS Lambda**: The serverless compute service that runs the Python function to compress PDF files using pypdf library.
 - **AWS EFS (Elastic File System)**: A scalable and fully managed NFS file system used to store the PDF files.
 
 ## Prerequisites
