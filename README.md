@@ -43,7 +43,9 @@ Before running the project, ensure you have the following prerequisites:
 2. The `watch_folder.sh` script will detect new PDF files and trigger the Lambda function to compress them.
 3. The compressed PDF files will be saved in the same directory with a different filename (e.g., `original_file_compressed.pdf`).
 
-## Solution Costs
+## Costs Estimation for this solution
+
+Considering sa-east (Sao Paulo) as region in 2024 June.
 
 **S3 Bucket**
 - Assuming a small amount of data storage (e.g., 1 GB), the cost would be around $0.02 per month.
