@@ -43,6 +43,34 @@ Before running the project, ensure you have the following prerequisites:
 2. The `watch_folder.sh` script will detect new PDF files and trigger the Lambda function to compress them.
 3. The compressed PDF files will be saved in the same directory with a different filename (e.g., `original_file_compressed.pdf`).
 
+## Solution Costs
+
+**S3 Bucket**
+- Assuming a small amount of data storage (e.g., 1 GB), the cost would be around $0.02 per month.
+
+**SNS Topic**
+- The cost for the SNS topic would be $0.50 per million requests.
+
+**Lambda Function**
+- Based on the configuration (256 MB memory, 60 seconds timeout), the cost for the Lambda function would be $0.000000834 per invocation, plus $0.000000167 for every GB-second of memory usage.
+- If the function is invoked frequently (e.g., 1 million times per month) and runs for the maximum duration (60 seconds) each time, the cost would be around $16.67 per month.
+
+**EFS File System**
+- The cost for the EFS file system would depend on the amount of storage provisioned and the data transfer. Assuming 1 GB of storage and minimal data transfer, the cost would be around $0.36 per month.
+
+**VPC Endpoints**
+- The cost for the VPC endpoint would be $0.01 per hour, which amounts to around $7.20 per month.
+
+**CloudWatch Logs**
+- Assuming a small amount of log data (e.g., 1 GB per month), the cost for CloudWatch Logs would be around $0.10 per month.
+
+**IAM Roles and Policies**
+- There is no additional cost for IAM roles and policies.
+
+Please note that these estimates are based on the specified configurations and assumptions. The actual costs may vary depending on usage patterns, data transfer, and other factors. Additionally, there may be other costs associated with services not included in this estimate, such as data transfer costs or costs for any additional AWS services you might use.
+
+It's recommended to use the AWS Pricing Calculator or the AWS Cost Explorer tool to obtain more accurate cost estimates based on your specific usage patterns and requirements.
+
 ## Cleaning Up
 
 To remove all AWS resources created by this project, run `terraform destroy` from the `infrastructure` directory.
